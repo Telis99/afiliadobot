@@ -1,7 +1,11 @@
 {
-  "name": "afiliado-mercado-livre",
+  "name": "afiliadobot",
   "version": "1.0.0",
+  "private": true,
   "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
     "buscar": "node motor/buscar-ofertas.js",
     "servidor": "node servidor/servidor.js",
     "iniciar": "node motor/agendador.js",
@@ -9,5 +13,12 @@
     "ml:auth:url": "node motor/ml-oauth.js url",
     "ml:auth:code": "node motor/ml-oauth.js code",
     "ml:auth:refresh": "node motor/ml-oauth.js refresh"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.99.0",
+    "axios": "^1.13.6",
+    "next": "^16.1.6",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
   }
 }
