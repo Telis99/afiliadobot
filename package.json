@@ -1,0 +1,13 @@
+{
+  "name": "afiliado-mercado-livre",
+  "version": "1.0.0",
+  "scripts": {
+    "buscar": "node motor/buscar-ofertas.js",
+    "servidor": "node servidor/servidor.js",
+    "iniciar": "node motor/agendador.js",
+    "redes": "node motor/gerar-redes.js",
+    "ml:auth:url": "node motor/ml-oauth.js url",
+    "ml:auth:code": "node motor/ml-oauth.js code",
+    "ml:auth:refresh": "node motor/ml-oauth.js refresh"
+  }
+}

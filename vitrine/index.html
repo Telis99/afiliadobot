@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ofertas do Dia — Mercado Livre</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Outfit', 'sans-serif'] },
+          colors: { brand: { 500: '#ffe600' }, dark: { 800: '#1a1a1a', 900: '#0d0d0d' } }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Outfit', sans-serif; }
+    .card-hover:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,.25); }
+  </style>
+</head>
+<body class="bg-dark-900 text-gray-100 min-h-screen antialiased">
+  <header class="sticky top-0 z-20 bg-dark-800/95 backdrop-blur border-b border-gray-800">
+    <div class="max-w-6xl mx-auto px-4 py-4">
+      <h1 class="text-xl sm:text-2xl font-bold text-brand-500">Ofertas do Dia</h1>
+      <p class="text-gray-400 text-sm">Descontos do Mercado Livre</p>
+      <div class="mt-4 flex flex-col sm:flex-row gap-3">
+        <input type="search" id="busca" placeholder="Buscar..." class="flex-1 rounded-lg bg-gray-800 border border-gray-700 px-4 py-2.5 focus:ring-2 focus:ring-brand-500 outline-none" />
+        <div class="flex gap-2 flex-wrap">
+          <button data-cat="todos" class="filtro px-4 py-2 rounded-lg font-medium bg-brand-500 text-black">Todos</button>
+          <button data-cat="eletronicos" class="filtro px-4 py-2 rounded-lg font-medium bg-gray-700 text-gray-300 hover:bg-gray-600">Eletrônicos</button>
+          <button data-cat="casa" class="filtro px-4 py-2 rounded-lg font-medium bg-gray-700 text-gray-300 hover:bg-gray-600">Casa</button>
+          <button data-cat="moda" class="filtro px-4 py-2 rounded-lg font-medium bg-gray-700 text-gray-300 hover:bg-gray-600">Moda</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-6">
+    <div id="loading" class="text-center py-12 text-gray-400">Carregando...</div>
+    <div id="erro" class="hidden text-center py-8 text-amber-400"></div>
+    <div id="grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"></div>
+    <p id="vazio" class="hidden text-center text-gray-500 py-8">Nenhuma oferta. Rode: npm run buscar</p>
+  </main>
+
+  <footer class="border-t border-gray-800 mt-12 py-6 text-center text-gray-500 text-sm">
+    Links de afiliado Mercado Livre.
+  </footer>
+
+  <script>
+    const grid = document.getElementById('grid');
+    const loading = document.getElementById('loading');
+    const erro = document.getElementById('erro');
+    const vazio = document.getElementById('vazio');
+    const inputBusca = document.getElementById('busca');
+
+    let categoria = 'todos';
+    let busca = '';
+    let ofertas = [];
+
+    function preco(v) {
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+    }
+
+    function render(ofertasFiltradas) {
+      grid.innerHTML = '';
+      loading.classList.add('hidden');
+      erro.classList.add('hidden');
+      if (ofertasFiltradas.length === 0) {
+        vazio.classList.remove('hidden');
+        return;
+      }
+      vazio.classList.add('hidden');
+      ofertasFiltradas.forEach(o => {
+        const card = document.createElement('article');
+        card.className = 'card-hover transition rounded-xl overflow-hidden bg-gray-800 border border-gray-700';
+        card.innerHTML = `
+          <a href="${o.link}" target="_blank" rel="noopener" class="block">
+            <div class="aspect-square bg-gray-700 flex items-center justify-center p-2">
+              <img src="${o.thumbnail || ''}" alt="" class="w-full h-full object-contain" loading="lazy" onerror="this.style.display='none'">
+            </div>
+            <div class="p-4">
+              <span class="text-xs font-semibold text-brand-500 uppercase">${o.categoria_nome || ''}</span>
+              <h2 class="font-semibold mt-1 line-clamp-2 min-h-[2.5rem]">${o.titulo || 'Produto'}</h2>
+              <div class="mt-2 flex items-baseline gap-2">
+                <span class="text-sm text-gray-500 line-through">${preco(o.preco_antigo)}</span>
+                <span class="text-lg font-bold text-brand-500">${preco(o.preco_novo)}</span>
+                <span class="text-sm font-semibold text-emerald-400">${o.desconto}% OFF</span>
+              </div>
+              <span class="mt-3 inline-block w-full text-center py-2 rounded-lg bg-brand-500 text-black font-semibold">Ver Oferta →</span>
+            </div>
+          </a>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function filtrar() {
+      let f = ofertas;
+      if (categoria !== 'todos') f = f.filter(o => (o.categoria_nome || '') === categoria);
+      if (busca) f = f.filter(o => (o.titulo || '').toLowerCase().includes(busca.toLowerCase()));
+      render(f);
+    }
+
+    async function carregar() {
+      try {
+        const res = await fetch('/api/ofertas');
+        const data = await res.json();
+        ofertas = data.ofertas || [];
+        filtrar();
+      } catch (e) {
+        loading.classList.add('hidden');
+        erro.textContent = 'Erro. Rode: npm run servidor';
+        erro.classList.remove('hidden');
+      }
+    }
+
+    document.querySelectorAll('.filtro').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filtro').forEach(b => {
+          b.classList.remove('bg-brand-500', 'text-black');
+          b.classList.add('bg-gray-700', 'text-gray-300');
+        });
+        btn.classList.remove('bg-gray-700', 'text-gray-300');
+        btn.classList.add('bg-brand-500', 'text-black');
+        categoria = btn.dataset.cat;
+        filtrar();
+      });
+    });
+
+    inputBusca.addEventListener('input', () => { busca = inputBusca.value.trim(); filtrar(); });
+    carregar();
+  </script>
+</body>
+</html>

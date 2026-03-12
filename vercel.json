@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/sync-promocoes?secret=minhasenha123",
+      "schedule": "0 * * * *"
+    }
+  ]
+}
